@@ -1,0 +1,30 @@
+Búsqueda en motores de búsqueda: Realiza búsquedas avanzadas en motores de búsqueda como Google.
+
+Análisis de DNS: Realiza consultas DNS para obtener registros como registros A, registros MX, registros NS, etc. identifica servidores asociados al dominio, direcciones IP relacionadas y otros detalles de infraestructura.
+
+Análisis de WHOIS: Realiza consultas WHOIS para obtener información sobre el registro del dominio, como el registrante, la fecha de creación, la fecha de vencimiento, etc. proporciona pistas adicionales sobre el propietario del dominio y su infraestructura.
+
+Búsqueda de certificados SSL/TLS: Busca certificados SSL/TLS asociados con el dominio. Esto puede revelar subdominios adicionales y servicios relacionados que utilizan cifrado SSL/TLS.
+
+Exploración de redes sociales: Busca perfiles sociales asociados con el dominio o sus propietarios. Esto puede proporcionar información adicional sobre la entidad detrás del dominio y sus actividades en línea.
+
+Exploración de repositorios públicos: Busca repositorios de código fuente como GitHub, GitLab, Bitbucket, etc., en busca de referencias al dominio en código fuente, archivos de configuración, etc.
+
+Exploración de servicios de alojamiento de archivos: Busca servicios de alojamiento de archivos como Dropbox, Google Drive, etc., en busca de archivos relacionados con el dominio.
+
+Análisis de redes: Realiza escaneos de puertos en las direcciones IP encontradas para identificar servicios en ejecución y posibles vulnerabilidades.
+
+Análisis de la reputación del dominio: Utiliza servicios como VirusTotal para verificar la reputación del dominio y detectar posibles amenazas como malware, phishing, etc.
+
+Recopilación y correlación de datos: Recopila todos los datos obtenidos de diversas fuentes y realiza análisis para identificar patrones, relaciones y posibles riesgos asociados con el dominio.
+
+Cuantas tecnicas es necesario usar para la creacion de la herramienta? existe un minimo?
+Primera entrega: Objetivos, esquema o estructura, calendarizacion
+visualizacion de los datos(grafos, dataframes o tablas)
+que tan extensa compleja debe ser la herramienta desarrollada
+introduccion, metodologias de desarrollo, tecnologias utilizadas, fuentes
+abiertas (OSINT), explicacion de tecnicas usadas , desarrollo e implementacion de la herramienta, tests, resultados, conclusion, anexos
+
+
+
+
