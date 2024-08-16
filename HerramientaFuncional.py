@@ -187,6 +187,16 @@ def recopilar_y_correlacionar_datos(dominio, api_key, cx, verbose=False):
         print(f"\n{Back.GREEN}{Fore.BLACK}Enlaces de redes sociales encontrados para {dominio}:{Style.RESET_ALL}")
         for enlace in enlaces_redes_sociales:
             print(f"{Fore.LIGHTBLUE_EX}{enlace}{Style.RESET_ALL}")
+    else:
+        # Modo minimalista
+        print(f"\n{Back.GREEN}{Fore.BLACK}Resumen de datos recopilados para {dominio}:{Style.RESET_ALL}")
+        print(f"{Fore.LIGHTBLUE_EX}Resultados Google: {len(resultados_google)}{Style.RESET_ALL}")
+        print(f"{Fore.LIGHTBLUE_EX}Subdominios: {len(subdominios)}{Style.RESET_ALL}")
+        print(f"{Fore.LIGHTBLUE_EX}Registros DNS: {len(respuesta_dns) if respuesta_dns else 0}{Style.RESET_ALL}")
+        print(f"{Fore.LIGHTBLUE_EX}Información WHOIS: {len(info_whois) if info_whois else 0}{Style.RESET_ALL}")
+        print(f"{Fore.LIGHTBLUE_EX}Certificado SSL/TLS: {'Sí' if certificado else 'No'}{Style.RESET_ALL}")
+        print(f"{Fore.LIGHTBLUE_EX}Enlaces Externos Wayback: {len(enlaces_externos_wayback)}{Style.RESET_ALL}")
+        print(f"{Fore.LIGHTBLUE_EX}Enlaces Redes Sociales: {len(enlaces_redes_sociales)}{Style.RESET_ALL}")
 
     return {
         'resultados_google': resultados_google,
@@ -227,6 +237,86 @@ def leer_dominios_csv(nombre_archivo):
     except Exception as e:
         print("Error al leer el archivo CSV:", e)
         return []
+    
+# Función para comparar dominios
+def comparar_dominios(dominio1, dominio2):
+
+    # Comparación de resultados de búsqueda en Google
+    print(f"\n{Fore.BLUE}Comparación de resultados de búsqueda en Google:{Style.RESET_ALL}")
+    if dominio1.get('resultados_google') and dominio2.get('resultados_google'):
+        comunes = set(dominio1['resultados_google']).intersection(set(dominio2['resultados_google']))
+        if comunes:
+            print(f"{Fore.YELLOW}Resultados comunes en Google: {Fore.GREEN}{comunes}{Style.RESET_ALL}")
+        else:
+            print(f"{Fore.RED}No se encontraron resultados comunes en Google entre los dominios.{Style.RESET_ALL}")
+    else:
+        print(f"{Fore.RED}No se encontraron resultados de búsqueda en Google para uno o ambos dominios.{Style.RESET_ALL}")
+
+    # Comparación de subdominios
+    print(f"\n{Fore.BLUE}Comparación de subdominios:{Style.RESET_ALL}")
+    if dominio1.get('subdominios') and dominio2.get('subdominios'):
+        comunes = set(dominio1['subdominios']).intersection(set(dominio2['subdominios']))
+        if comunes:
+            print(f"{Fore.YELLOW}Subdominios comunes: {Fore.GREEN}{comunes}{Style.RESET_ALL}")
+        else:
+            print(f"{Fore.RED}No se encontraron subdominios comunes entre los dominios.{Style.RESET_ALL}")
+    else:
+        print(f"{Fore.RED}No se encontraron subdominios para uno o ambos dominios.{Style.RESET_ALL}")
+        
+    # Comparación de la información WHOIS
+    print(f"{Fore.BLUE}Comparación de la información WHOIS:{Style.RESET_ALL}")
+    if dominio1.get('info_whois') and dominio2.get('info_whois'):
+        for key in dominio1['info_whois']:
+            if key in dominio2['info_whois']:
+                print(f"{Fore.YELLOW}{key}:{Style.RESET_ALL}")
+                print(f"  {Fore.GREEN}Dominio 1: {dominio1['info_whois'].get(key, 'No disponible')}{Style.RESET_ALL}")
+                print(f"  {Fore.GREEN}Dominio 2: {dominio2['info_whois'].get(key, 'No disponible')}{Style.RESET_ALL}")
+    else:
+        print(f"{Fore.RED}No se encontró información WHOIS para uno o ambos dominios.{Style.RESET_ALL}")
+
+    # Comparación de registros DNS
+    print(f"\n{Fore.BLUE}Comparación de registros DNS:{Style.RESET_ALL}")
+    if dominio1.get('respuesta_dns') and dominio2.get('respuesta_dns'):
+        for key in dominio1['respuesta_dns']:
+            if key in dominio2['respuesta_dns']:
+                print(f"{Fore.YELLOW}{key}:{Style.RESET_ALL}")
+                print(f"  {Fore.GREEN}Dominio 1: {dominio1['respuesta_dns'].get(key, 'No disponible')}{Style.RESET_ALL}")
+                print(f"  {Fore.GREEN}Dominio 2: {dominio2['respuesta_dns'].get(key, 'No disponible')}{Style.RESET_ALL}")
+    else:
+        print(f"{Fore.RED}No se encontraron registros DNS para uno o ambos dominios.{Style.RESET_ALL}")
+
+    # Comparación de certificados SSL/TLS
+    print(f"\n{Fore.BLUE}Comparación de certificados SSL/TLS:{Style.RESET_ALL}")
+    if dominio1.get('certificado') and dominio2.get('certificado'):
+        for key in dominio1['certificado']:
+            if key in dominio2['certificado']:
+                print(f"{Fore.YELLOW}{key}:{Style.RESET_ALL}")
+                print(f"  {Fore.GREEN}Dominio 1: {dominio1['certificado'].get(key, 'No disponible')}{Style.RESET_ALL}")
+                print(f"  {Fore.GREEN}Dominio 2: {dominio2['certificado'].get(key, 'No disponible')}{Style.RESET_ALL}")
+    else:
+        print(f"{Fore.RED}No se encontraron certificados SSL/TLS para uno o ambos dominios.{Style.RESET_ALL}")
+
+    # Comparación de enlaces externos en Wayback Machine
+    print(f"\n{Fore.BLUE}Comparación de enlaces externos en Wayback Machine:{Style.RESET_ALL}")
+    if dominio1.get('enlaces_externos_wayback') and dominio2.get('enlaces_externos_wayback'):
+        comunes = dominio1['enlaces_externos_wayback'].intersection(dominio2['enlaces_externos_wayback'])
+        if comunes:
+            print(f"{Fore.YELLOW}Enlaces comunes: {Fore.GREEN}{comunes}{Style.RESET_ALL}")
+        else:
+            print(f"{Fore.RED}No se encontraron enlaces comunes entre los dominios.{Style.RESET_ALL}")
+    else:
+        print(f"{Fore.RED}No se encontraron enlaces en Wayback Machine para uno o ambos dominios.{Style.RESET_ALL}")
+
+    # Comparación de enlaces en redes sociales
+    print(f"\n{Fore.BLUE}Comparación de enlaces en redes sociales:{Style.RESET_ALL}")
+    if dominio1.get('enlaces_redes_sociales') and dominio2.get('enlaces_redes_sociales'):
+        comunes = dominio1['enlaces_redes_sociales'].intersection(dominio2['enlaces_redes_sociales'])
+        if comunes:
+            print(f"{Fore.YELLOW}Enlaces comunes en redes sociales: {Fore.GREEN}{comunes}{Style.RESET_ALL}")
+        else:
+            print(f"{Fore.RED}No se encontraron enlaces comunes en redes sociales entre los dominios.{Style.RESET_ALL}")
+    else:
+        print(f"{Fore.RED}No se encontraron enlaces en redes sociales para uno o ambos dominios.{Style.RESET_ALL}")
 
 # Función para guardar resultados en un archivo CSV
 def guardar_en_csv(datos, nombre_archivo):
