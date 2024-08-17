@@ -265,14 +265,21 @@ def comparar_dominios(dominio1, dominio2):
         
     # Comparación de la información WHOIS
     print(f"{Fore.BLUE}Comparación de la información WHOIS:{Style.RESET_ALL}")
+
     if dominio1.get('info_whois') and dominio2.get('info_whois'):
-        for key in dominio1['info_whois']:
-            if key in dominio2['info_whois']:
-                print(f"{Fore.YELLOW}{key}:{Style.RESET_ALL}")
-                print(f"  {Fore.GREEN}Dominio 1: {dominio1['info_whois'].get(key, 'No disponible')}{Style.RESET_ALL}")
-                print(f"  {Fore.GREEN}Dominio 2: {dominio2['info_whois'].get(key, 'No disponible')}{Style.RESET_ALL}")
+        if all(value is None for value in dominio1['info_whois'].values()) and all(value is None for value in dominio2['info_whois'].values()):
+            print(f"{Fore.RED}No se encontró información WHOIS válida para ninguno de los dominios.{Style.RESET_ALL}")
+        else:
+            for key in dominio1['info_whois']:
+                if key in dominio2['info_whois']:
+                    print(f"{Fore.YELLOW}{key}:{Style.RESET_ALL}")
+                    print(f"  {Fore.GREEN}Dominio 1: {dominio1['info_whois'].get(key, 'No disponible')}{Style.RESET_ALL}")
+                    print(f"  {Fore.GREEN}Dominio 2: {dominio2['info_whois'].get(key, 'No disponible')}{Style.RESET_ALL}")
     else:
-        print(f"{Fore.RED}No se encontró información WHOIS para uno o ambos dominios.{Style.RESET_ALL}")
+        if not dominio1.get('info_whois'):
+            print(f"{Fore.RED}No se encontró información WHOIS para el Dominio 1.{Style.RESET_ALL}")
+        if not dominio2.get('info_whois'):
+            print(f"{Fore.RED}No se encontró información WHOIS para el Dominio 2.{Style.RESET_ALL}")
 
     # Comparación de registros DNS
     print(f"\n{Fore.BLUE}Comparación de registros DNS:{Style.RESET_ALL}")
