@@ -1,0 +1,3 @@
+crear un function de comparar dominios sin detalles Te recomiendo una función  de comparación de dominios donde busques dominios dentro de la información de dns, whois y ssl. Esos dominios estarán relacionados 100% de una forma u otra (hosting, campaña publicitaria, misma empresa, etc).
+
+Para comprar el doninio original con los dominios que hayas encontrado con scraping, deberías ver qué propiedades ssl, dns y whois comparten y poner un porcentaje de relación. También puedes determinar au relación usando otras técnicas (de hecho te lo recomiendo) por ejemplo mirando el contenido. Te envié un ejemplo de cocacola unos correos atrás.
