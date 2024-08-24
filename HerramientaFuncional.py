@@ -8,6 +8,7 @@ import random
 from urllib.parse import urlparse
 from colorama import Fore, Style, Back, init
 import csv
+import os
 
 init(autoreset=True)
 
@@ -105,7 +106,6 @@ def obtener_enlaces_externos_wayback(dominio):
     urls_wayback = obtener_enlaces_wayback(dominio)
     enlaces_externos = set()
     for url in urls_wayback:
-        print(f"Analizando {url} desde Wayback Machine...")
         enlaces_pagina = obtener_enlaces_pagina(url)
         for enlace in enlaces_pagina:
             dominio_enlace = urlparse(enlace).netloc
@@ -208,15 +208,34 @@ def recopilar_y_correlacionar_datos(dominio, api_key, cx, verbose=False):
         'enlaces_redes_sociales': enlaces_redes_sociales
     }
 
-# Función para encontrar dominios relacionados automáticamente
-def encontrar_dominios_relacionados(dominio_principal, api_key, cx):
+# Función para encontrar dominios relacionados automáticamente con WayBack Machine
+def encontrar_dominios_relacionados_WayBackMachine(dominio_principal):
+    resultados = obtener_enlaces_externos_wayback(dominio_principal)
+    dominios_relacionados = set()
+
+    # Lista de dominios a excluir (redes sociales y otros dominios no relevantes)
+    dominios_excluidos = {
+        'www.youtube.com', 'www.facebook.com', 'www.instagram.com', 'www.twitter.com', 'www.linkedin.com', 'www.pinterest.com', 'www.tiktok.com',
+        'youtube.com', 'facebook.com', 'instagram.com', 'twitter.com', 'linkedin.com', 'pinterest.com', 'tiktok.com', 'es-es.facebook.com'
+    }
+
+    for resultado in resultados:
+        # Filtra dominios excluidos y dominios principales
+        if resultado and resultado != dominio_principal and resultado not in dominios_excluidos:
+            dominios_relacionados.add(resultado)
+    
+    return list(dominios_relacionados)
+
+# Función para encontrar dominios relacionados automáticamente con Google
+def encontrar_dominios_relacionados_Google(dominio_principal, api_key, cx):
     consulta = f"site:{dominio_principal}"
     resultados = buscar_en_google_custom_search(consulta, api_key, cx)
     dominios_relacionados = set()
     
     # Lista de dominios a excluir (redes sociales y otros dominios no relevantes)
     dominios_excluidos = {
-        'youtube.com', 'facebook.com', 'instagram.com', 'twitter.com', 'linkedin.com', 'pinterest.com'
+        'www.youtube.com', 'www.facebook.com', 'www.instagram.com', 'www.twitter.com', 'www.linkedin.com', 'www.pinterest.com', 'www.tiktok.com',
+        'youtube.com', 'facebook.com', 'instagram.com', 'twitter.com', 'linkedin.com', 'pinterest.com', 'tiktok.com', 'es-es.facebook.com'
     }
 
     for resultado in resultados:
@@ -325,6 +344,73 @@ def comparar_dominios(dominio1, dominio2):
     else:
         print(f"{Fore.RED}No se encontraron enlaces en redes sociales para uno o ambos dominios.{Style.RESET_ALL}")
 
+# Función para comparar dominios de forma simple
+def comparar_dominios_simple(dominio1, dominio2):
+    # Inicializa los contadores
+    total_criterios = 0
+    coincidencias = 0
+
+    # Obtén los nombres de dominio, maneja si no existen
+    nombre_dominio1 = dominio1.get('dominio', 'Dominio 1')
+    nombre_dominio2 = dominio2.get('dominio', 'Dominio 2')
+
+    # Comparación de información WHOIS
+    print(f"\n{Fore.BLUE}Comparación de la información WHOIS:{Style.RESET_ALL}")
+    if dominio1.get('info_whois') and dominio2.get('info_whois'):
+        for key, value1 in dominio1['info_whois'].items():
+            value2 = dominio2['info_whois'].get(key)
+            total_criterios += 1
+            if value1 and value2 and value1 == value2:
+                print(f"{Fore.GREEN}Coincidencia en WHOIS: {key} - {value1}{Style.RESET_ALL}")
+                coincidencias += 1
+            else:
+                print(f"{Fore.YELLOW}No hay coincidencia en WHOIS para {key}. {nombre_dominio1}: {value1}, {nombre_dominio2}: {value2}{Style.RESET_ALL}")
+    else:
+        print(f"{Fore.RED}No se encontró información WHOIS para uno o ambos dominios.{Style.RESET_ALL}")
+        total_criterios += 1  # Incrementar para reflejar que se evaluó este criterio
+
+    # Comparación de registros DNS
+    print(f"\n{Fore.BLUE}Comparación de registros DNS:{Style.RESET_ALL}")
+    if dominio1.get('respuesta_dns') and dominio2.get('respuesta_dns'):
+        for key, value1 in dominio1['respuesta_dns'].items():
+            value2 = dominio2['respuesta_dns'].get(key)
+            total_criterios += 1
+            if value1 and value2 and value1 == value2:
+                print(f"{Fore.GREEN}Coincidencia en DNS: {key} - {value1}{Style.RESET_ALL}")
+                coincidencias += 1
+            else:
+                print(f"{Fore.YELLOW}No hay coincidencia en DNS para {key}. {nombre_dominio1}: {value1}, {nombre_dominio2}: {value2}{Style.RESET_ALL}")
+    else:
+        print(f"{Fore.RED}No se encontraron registros DNS para uno o ambos dominios.{Style.RESET_ALL}")
+        total_criterios += 1  # Incrementar para reflejar que se evaluó este criterio
+
+    # Comparación de certificados SSL/TLS
+    print(f"\n{Fore.BLUE}Comparación de certificados SSL/TLS:{Style.RESET_ALL}")
+    if dominio1.get('certificado') and dominio2.get('certificado'):
+        for key, value1 in dominio1['certificado'].items():
+            value2 = dominio2['certificado'].get(key)
+            total_criterios += 1
+            if value1 and value2 and value1 == value2:
+                print(f"{Fore.GREEN}Coincidencia en SSL/TLS: {key} - {value1}{Style.RESET_ALL}")
+                coincidencias += 1
+            else:
+                print(f"{Fore.YELLOW}No hay coincidencia en SSL/TLS para {key}. {nombre_dominio1}: {value1}, {nombre_dominio2}: {value2}{Style.RESET_ALL}")
+    else:
+        print(f"{Fore.RED}No se encontraron certificados SSL/TLS para uno o ambos dominios.{Style.RESET_ALL}")
+        total_criterios += 1  # Incrementar para reflejar que se evaluó este criterio
+
+    # Calcula el porcentaje de coincidencia
+    if total_criterios > 0:
+        porcentaje_relacion = (coincidencias / total_criterios) * 100
+        print(f"\n{Fore.YELLOW}Porcentaje de relación entre {nombre_dominio1} y {nombre_dominio2}: {Fore.GREEN}{porcentaje_relacion:.2f}%{Style.RESET_ALL}")
+    else:
+        print(f"{Fore.RED}No se encontraron criterios suficientes para comparar.{Style.RESET_ALL}")
+
+    # Asegura siempre tener un resultado incluso si no hay coincidencias
+    if coincidencias == 0 and total_criterios > 0:
+        print(f"{Fore.RED}No se encontraron coincidencias entre {nombre_dominio1} y {nombre_dominio2}.{Style.RESET_ALL}")
+
+
 # Función para guardar resultados en un archivo CSV
 def guardar_en_csv(datos, nombre_archivo):
     try:
@@ -345,50 +431,129 @@ def guardar_en_csv(datos, nombre_archivo):
     except Exception as e:
         print("Error al guardar en el archivo CSV:", e)
 
+# Ejecución de la herramienta
 if __name__ == "__main__":
-    api_key = input("Introduce tu clave API de Google Custom Search: ")
-    cx = input("Introduce el ID de búsqueda personalizada (CX): ")
-    modo = input("¿Deseas analizar un dominio o varios dominios desde un archivo CSV? (uno/varios): ").lower()
+    # Solicita la clave API de Google Custom Search
+    while True:
+        api_key = input("Introduce tu clave API de Google Custom Search: ").strip()
+        if api_key:
+            break
+        print(f"{Back.RED}{Fore.BLACK}Clave API no válida. Por favor, introduce un valor válido.{Style.RESET_ALL}")
+    
+    # Solicita el ID de búsqueda personalizada (CX)
+    while True:
+        cx = input("Introduce el ID de búsqueda personalizada (CX): ").strip()
+        if cx:
+            break
+        print(f"{Back.RED}{Fore.BLACK}ID de búsqueda personalizada (CX) no válido. Por favor, introduce un valor válido.{Style.RESET_ALL}")
+    
+    # Solicita el modo de operación
+    while True:
+        modo = input("¿Deseas analizar un dominio o varios dominios desde un archivo CSV? (uno/varios): ").strip().lower()
+        if modo in ["uno", "varios"]:
+            break
+        print(f"{Back.RED}{Fore.BLACK}Modo no reconocido. Por favor, elige 'uno' o 'varios'.{Style.RESET_ALL}")
 
     if modo == "uno":
-        dominio_principal = input("Introduce el dominio principal a analizar: ")
-        verbose = input("¿Desea una salida detallada? (si/no): ").lower() == "si"
+        # Solicita el dominio principal a analizar
+        while True:
+            dominio_principal = input("Introduce el dominio principal a analizar: ").strip()
+            if dominio_principal:
+                break
+            print(f"{Back.RED}{Fore.BLACK}Dominio principal no válido.{Style.RESET_ALL}")
 
-        # Recopila y correlaciona datos del dominio principal
-        datos_dominio_principal = recopilar_y_correlacionar_datos(dominio_principal, api_key, cx, verbose=verbose)
+        # Solicita si desea una salida detallada
+        verbose = input("¿Desea una salida detallada? (si/no): ").strip().lower() == "si"
 
-        if input("\n¿Desea realizar comparaciones entre dominios? (si/no): ").lower() == "si":
-            # Encuentra automáticamente los dominios relacionados
-            dominios_relacionados = encontrar_dominios_relacionados(dominio_principal, api_key, cx)
-            if dominios_relacionados:
-                print(f"\n{Back.GREEN}{Fore.BLACK}Dominios relacionados encontrados:{Style.RESET_ALL}")
-                for dominio in dominios_relacionados:
-                    print(f"{Fore.LIGHTBLUE_EX}{dominio}{Style.RESET_ALL}")
+        try:
+            # Recopila y correlaciona datos del dominio principal
+            datos_dominio_principal = recopilar_y_correlacionar_datos(dominio_principal, api_key, cx, verbose=verbose)
 
-                for dominio in dominios_relacionados:
-                    print(f"\n{Back.GREEN}{Fore.BLACK}Recopilando datos para el dominio relacionado: {dominio}{Style.RESET_ALL}")
-                    datos_dominio_relacionado = recopilar_y_correlacionar_datos(dominio, api_key, cx, verbose=verbose)
-                    print(f"\n{Back.CYAN}{Fore.BLACK}Comparación entre {dominio_principal} y {dominio}:{Style.RESET_ALL}")
-                    comparar_dominios(datos_dominio_principal, datos_dominio_relacionado)
+            # Opciones de comparaciones entre dominios
+            while True:
+                opcion_comparacion = input("\n¿Desea realizar comparaciones entre dominios con detalles (Google)? (si/no): ").strip().lower()
+                if opcion_comparacion in ["si", "no"]:
+                    break
+                print(f"{Back.RED}{Fore.BLACK}Opción no válida. Por favor, elige 'si' o 'no'.{Style.RESET_ALL}")
+
+            if opcion_comparacion == "si":
+                # Encuentra automáticamente los dominios relacionados
+                dominios_relacionados = encontrar_dominios_relacionados_Google(dominio_principal, api_key, cx)
+                if dominios_relacionados:
+                    print(f"\n{Back.GREEN}{Fore.BLACK}Dominios relacionados encontrados:{Style.RESET_ALL}")
+                    for dominio in dominios_relacionados:
+                        print(f"{Fore.LIGHTBLUE_EX}{dominio}{Style.RESET_ALL}")
+
+                    for dominio in dominios_relacionados:
+                        print(f"\n{Back.GREEN}{Fore.BLACK}Recopilando datos para el dominio relacionado: {dominio}{Style.RESET_ALL}")
+                        datos_dominio_relacionado = recopilar_y_correlacionar_datos(dominio, api_key, cx, verbose=verbose)
+                        print(f"\n{Back.CYAN}{Fore.BLACK}Comparación entre {dominio_principal} y {dominio}:{Style.RESET_ALL}")
+                        comparar_dominios(datos_dominio_principal, datos_dominio_relacionado)
+                else:
+                    print(f"{Back.RED}{Fore.BLACK}No se encontraron dominios relacionados.{Style.RESET_ALL}")
+
             else:
-                print(f"{Back.RED}{Fore.BLACK}No se encontraron dominios relacionados.{Style.RESET_ALL}")
-        else:
-            print(f"\n{Back.YELLOW}{Fore.BLACK}No se realizarán comparaciones entre dominios.{Style.RESET_ALL}")
+                # Pregunta si desea realizar comparaciones sin detalles
+                while True:
+                    opcion_comparacion_simple = input("\n¿Desea realizar comparaciones entre dominios sin detalles (WayBack Machine)? (si/no): ").strip().lower()
+                    if opcion_comparacion_simple in ["si", "no"]:
+                        break
+                    print(f"{Back.RED}{Fore.BLACK}Opción no válida. Por favor, elige 'si' o 'no'.{Style.RESET_ALL}")
+
+                if opcion_comparacion_simple == "si":
+                    # Encuentra automáticamente los dominios relacionados sin detalles
+                    dominios_relacionados = encontrar_dominios_relacionados_WayBackMachine(dominio_principal)
+                    if dominios_relacionados:
+                        print(f"\n{Back.GREEN}{Fore.BLACK}Dominios relacionados encontrados:{Style.RESET_ALL}")
+                        for dominio in dominios_relacionados:
+                            print(f"{Fore.LIGHTBLUE_EX}{dominio}{Style.RESET_ALL}")
+
+                        for dominio in dominios_relacionados:
+                            print(f"\n{Back.GREEN}{Fore.BLACK}Recopilando datos para el dominio relacionado: {dominio}{Style.RESET_ALL}")
+                            datos_dominio_relacionado = recopilar_y_correlacionar_datos(dominio, api_key, cx, verbose=verbose)
+                            print(f"\n{Back.CYAN}{Fore.BLACK}Comparación entre {dominio_principal} y {dominio}:{Style.RESET_ALL}")
+                            comparar_dominios_simple(datos_dominio_principal, datos_dominio_relacionado)
+                    else:
+                        print(f"{Back.RED}{Fore.BLACK}No se encontraron dominios relacionados.{Style.RESET_ALL}")
+
+                else:
+                    print(f"\n{Back.YELLOW}{Fore.BLACK}No se realizarán comparaciones entre dominios.{Style.RESET_ALL}")
+
+        except Exception as e:
+            print(f"{Back.RED}{Fore.BLACK}Ocurrió un error: {e}{Style.RESET_ALL}")
 
     elif modo == "varios":
-        archivo_csv = input("Introduce el nombre del archivo CSV con los dominios: ")
+        # Solicita el nombre del archivo CSV
+        while True:
+            archivo_csv = input("Introduce el nombre del archivo CSV con los dominios: ").strip()
+            if os.path.isfile(archivo_csv):
+                break
+            print(f"{Back.RED}{Fore.BLACK}El archivo CSV no existe o no es accesible. Por favor, introduce un archivo válido.{Style.RESET_ALL}")
+
         dominios = leer_dominios_csv(archivo_csv)
 
         if dominios:
             resultados = []
             for dominio in dominios:
                 if dominio:
-                    print(f"\n{Back.GREEN}{Fore.BLACK}Recopilando datos para el dominio: {dominio}{Style.RESET_ALL}")
-                    datos = recopilar_y_correlacionar_datos(dominio, api_key, cx, verbose=True)
-                    resultados.append({'dominio': dominio, **datos})
-            archivo_csv_salida = input("Introduce el nombre del archivo CSV de salida para guardar los resultados: ")
-            guardar_en_csv(resultados, archivo_csv_salida)
+                    try:
+                        print(f"\n{Back.GREEN}{Fore.BLACK}Recopilando datos para el dominio: {dominio}{Style.RESET_ALL}")
+                        datos = recopilar_y_correlacionar_datos(dominio, api_key, cx, verbose=True)
+                        resultados.append({'dominio': dominio, **datos})
+                    except Exception as e:
+                        print(f"{Back.RED}{Fore.BLACK}Error al procesar el dominio {dominio}: {e}{Style.RESET_ALL}")
+
+            # Solicita el nombre del archivo CSV de salida
+            while True:
+                archivo_csv_salida = input("Introduce el nombre del archivo CSV de salida para guardar los resultados: ").strip()
+                if archivo_csv_salida:
+                    try:
+                        guardar_en_csv(resultados, archivo_csv_salida)
+                        print(f"{Back.GREEN}{Fore.BLACK}Resultados guardados en {archivo_csv_salida}.{Style.RESET_ALL}")
+                        break
+                    except Exception as e:
+                        print(f"{Back.RED}{Fore.BLACK}Error al guardar los resultados en el archivo CSV: {e}{Style.RESET_ALL}")
+                else:
+                    print(f"{Back.RED}{Fore.BLACK}Nombre de archivo CSV de salida no válido.{Style.RESET_ALL}")
         else:
             print(f"{Back.RED}{Fore.BLACK}No se encontraron dominios en el archivo CSV.{Style.RESET_ALL}")
-    else:
-        print(f"{Back.RED}{Fore.BLACK}Modo no reconocido. Por favor, elige 'uno' o 'varios'.{Style.RESET_ALL}")
